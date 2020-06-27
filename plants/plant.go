@@ -12,25 +12,25 @@ type Catalog struct {
 
 // Plant is a description of a single house plant
 type Plant struct {
-	name          string
-	size          string
-	waterSchedule int // TODO: consts / map to seconds
-	sunLevel      int // TODO: consts for this
-	notes         string
-	isPetSafe     bool
-	food          int // TODO: consts / map to seconds
-	shouldMist    bool
+	Name          string `json:"name" bson:"name"`
+	Size          string `json:"size" bson:"size"`
+	WaterSchedule int    `json:"waterSchedule" bson:"waterSchedule"` // TODO: consts / map to seconds
+	SunLevel      int    `json:"sunLevel" bson:"sunLevel"`           // TODO: consts for this
+	Notes         string `json:"notes" bson:"notes"`
+	IsPetSafe     bool   `json:"isPetSafe" bson:"isPetSafe"`
+	Food          int    `json:"food" bson:"food"` // TODO: consts / map to seconds
+	ShouldMist    bool   `json:"shouldMist" bson:"shouldMist"`
 }
 
 func (p Plant) String() string {
-	return p.name
+	return p.Name
 }
 
 // GetPlant will return a plant from mongo db
 func (c Catalog) GetPlant(w http.ResponseWriter, req *http.Request) {
-	plantName := req.URL.Query().Get("name")
+	// plantName := req.URL.Query().Get("name")
 
-	plant, err := getPlantByName(plantName)
+	plant, err := getPlantByName("Test")
 
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -60,14 +60,14 @@ func (c Catalog) GetAllPlants(w http.ResponseWriter, req *http.Request) {
 // AddPlant will add a plant to our db store
 func (c Catalog) AddPlant(w http.ResponseWriter, req *http.Request) {
 	_, err := insertPlant(Plant{
-		name:          "Test",
-		size:          "M",
-		waterSchedule: 13400,
-		sunLevel:      3,
-		notes:         "Nothing special to do here.",
-		isPetSafe:     true,
-		food:          260000,
-		shouldMist:    true,
+		Name:          "Test",
+		Size:          "M",
+		WaterSchedule: 13400,
+		SunLevel:      3,
+		Notes:         "Nothing special to do here.",
+		IsPetSafe:     true,
+		Food:          260000,
+		ShouldMist:    true,
 	})
 
 	if err != nil {

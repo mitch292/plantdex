@@ -2,7 +2,7 @@ package plants
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -22,14 +22,14 @@ var db = client.Database("plantdex").Collection("plants")
 
 func insertPlant(p Plant) (bool, error) {
 	_, err := db.InsertOne(context.TODO(), bson.D{
-		{Key: "name", Value: p.name},
-		{Key: "size", Value: p.size},
-		{Key: "waterSchedule", Value: p.waterSchedule},
-		{Key: "sunLevel", Value: p.sunLevel},
-		{Key: "notes", Value: p.notes},
-		{Key: "isPetSafe", Value: p.isPetSafe},
-		{Key: "food", Value: p.food},
-		{Key: "shouldMist", Value: p.shouldMist},
+		{Key: "name", Value: p.Name},
+		{Key: "size", Value: p.Size},
+		{Key: "waterSchedule", Value: p.WaterSchedule},
+		{Key: "sunLevel", Value: p.SunLevel},
+		{Key: "notes", Value: p.Notes},
+		{Key: "isPetSafe", Value: p.IsPetSafe},
+		{Key: "food", Value: p.Food},
+		{Key: "shouldMist", Value: p.ShouldMist},
 	})
 
 	if err != nil {
@@ -41,7 +41,7 @@ func insertPlant(p Plant) (bool, error) {
 
 func getPlantByName(name string) (*Plant, error) {
 	var foundPlant Plant
-	filter := bson.D{{Key: "name", Value: name}}
+	filter := bson.M{"name": name}
 
 	err := db.FindOne(context.TODO(), filter).Decode(&foundPlant)
 
@@ -49,44 +49,22 @@ func getPlantByName(name string) (*Plant, error) {
 		return nil, err
 	}
 
-	fmt.Printf("Found a single document: %+v\n", foundPlant)
 	return &foundPlant, nil
 }
 
-func getAllPlants() ([]*Plant, error) {
-	findOptions := options.Find()
+func getAllPlants() ([]Plant, error) {
 
-	var results []*Plant
-
-	// Grab a cursor
-	cur, err := db.Find(context.TODO(), bson.D{{}}, findOptions)
+	cursor, err := db.Find(context.TODO(), bson.M{})
 
 	if err != nil {
-		return results, err
+		log.Fatal(err)
 	}
 
-	// Loop through our collection
-	for cur.Next(context.TODO()) {
-		// create a Plant to be decoded into
-		var plant Plant
-		err := cur.Decode(&plant)
+	var plants []Plant
 
-		if err != nil {
-			// return what we have so far and the error
-			return results, err
-		}
-
-		results = append(results, &plant)
-
+	if err = cursor.All(context.TODO(), &plants); err != nil {
+		return plants, err
 	}
 
-	if err := cur.Err(); err != nil {
-		return results, err
-	}
-
-	// close the cursor connection
-	cur.Close(context.TODO())
-	fmt.Printf("Found multiple documents (array of pointers): %+v\n", results)
-	return results, nil
-
+	return plants, nil
 }
