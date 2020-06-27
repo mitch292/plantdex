@@ -1,0 +1,44 @@
+syntax = "proto3";
+package plants;
+
+option go_package = "/plants";
+
+enum SunLevel {
+	NEVER = 0;
+	SOME = 1;
+	INDIRECT = 2;
+	DIRECT = 3;
+}
+
+enum Size {
+	XSMALL = 0;
+	SMALL = 1;
+	MEDIUM = 2;
+	LARGE = 3;
+	XLARGE = 4;
+}
+
+message RequestPlant {
+	int64 ID = 1;
+}
+
+message Plant {
+	string name = 1;
+	Size size = 2;
+	int64 waterSchedule = 3;
+	SunLevel sunLevel = 4;
+	string notes = 5;
+	bool isPetSafe = 6;
+	int64 food = 7;
+	bool shouldMist = 8;
+}
+
+message Feedback {
+	bool success = 1;
+	string message = 2;
+}
+
+service PlantsService {
+	rpc GetPlant(RequestPlant) returns (Plant) {}
+	rpc AddPlant(Plant) returns (Feedback) {}
+}

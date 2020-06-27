@@ -1,70 +1,61 @@
 package plants
 
 import (
-	"context"
+	"database/sql"
 	"log"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	// This driver needs to be made available to the database/sql package
+	_ "github.com/mattn/go-sqlite3"
 )
 
-// Set client options
-// TODO: env variable
-var clientOptions = options.Client().ApplyURI("mongodb://localhost:27017")
+// DB handles our interaction with the sqlite db
+var db *sql.DB
 
-// Connect to MongoDB
-var client, err = mongo.Connect(context.TODO(), clientOptions)
-
-// DB is the connection to our mongo db collection for the plants
-// TODO: Env variable
-var db = client.Database("plantdex").Collection("plants")
-
-func insertPlant(p Plant) (bool, error) {
-	_, err := db.InsertOne(context.TODO(), bson.D{
-		{Key: "name", Value: p.Name},
-		{Key: "size", Value: p.Size},
-		{Key: "waterSchedule", Value: p.WaterSchedule},
-		{Key: "sunLevel", Value: p.SunLevel},
-		{Key: "notes", Value: p.Notes},
-		{Key: "isPetSafe", Value: p.IsPetSafe},
-		{Key: "food", Value: p.Food},
-		{Key: "shouldMist", Value: p.ShouldMist},
-	})
-
+// InitDB will create our SQLite3 DB if it doesn't exist
+func InitDB() {
+	database, err := sql.Open("sqlite3", "./plantdex.db")
 	if err != nil {
-		return false, err
+		log.Fatalf("Error opening the sqlite connection: %s\n", err)
 	}
 
-	return true, nil
+	stmt, err := database.Prepare("CREATE TABLE IF NOT EXISTS plants (id INTEGER PRIMARY KEY, name TEXT, size INTEGER, water_schedule INTEGER, sun_level INTEGER, notes TEXT, is_pet_safe INTEGER, food INTEGER, should_mist INTEGER)")
+	if err != nil {
+		log.Fatalf("Error generating the plants table create if not exist statment %s\n", err)
+	}
+	stmt.Exec()
+
+	db = database
 }
 
-func getPlantByName(name string) (*Plant, error) {
-	var foundPlant Plant
-	filter := bson.M{"name": name}
-
-	err := db.FindOne(context.TODO(), filter).Decode(&foundPlant)
-
+// addPlantToDB will add a plant to our plants table in the database
+func addPlantToDB(p *Plant) (int64, error) {
+	stmt, err := db.Prepare("INSERT INTO plants (name, size, water_schedule, sun_level, notes, is_pet_safe, food, should_mist) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
-		return nil, err
+		log.Fatalf("Error preparing the insert statement: %s\n", err)
+		return 0, err
 	}
 
-	return &foundPlant, nil
+	res, err := stmt.Exec(p.Name, p.Size, p.WaterSchedule, p.SunLevel, p.Notes, p.IsPetSafe, p.Food, p.ShouldMist)
+	if err != nil {
+		log.Fatalf("Error adding the plant to the database: %s\n", err)
+		return 0, err
+	}
+
+	newPlantID, err := res.LastInsertId()
+	if err != nil {
+		log.Fatalf("Error readingt he last inserted item's ID: %s\n", err)
+	}
+
+	return newPlantID, nil
 }
 
-func getAllPlants() ([]Plant, error) {
-
-	cursor, err := db.Find(context.TODO(), bson.M{})
-
+func getPlantFromDB(id int64) (*Plant, error) {
+	var p Plant
+	err := db.QueryRow("SELECT name, size, water_schedule, sun_level, notes, is_pet_safe, food, should_mist FROM plants WHERE id = ?", id).Scan(&p.Name, &p.Size, &p.WaterSchedule, &p.SunLevel, &p.Notes, &p.IsPetSafe, &p.Food, &p.ShouldMist)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error fetching the plant from the database: %s\n", err)
+		return &p, err
 	}
 
-	var plants []Plant
-
-	if err = cursor.All(context.TODO(), &plants); err != nil {
-		return plants, err
-	}
-
-	return plants, nil
+	return &p, nil
 }
