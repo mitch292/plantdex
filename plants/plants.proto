@@ -23,15 +23,22 @@ message RequestPlant {
 }
 
 message Plant {
-	string name = 1;
-	Size size = 2;
-	int64 waterSchedule = 3;
-	SunLevel sunLevel = 4;
-	string notes = 5;
-	bool isPetSafe = 6;
-	int64 food = 7;
-	bool shouldMist = 8;
+	int64 id = 1;
+	string name = 2;
+	Size size = 3;
+	int64 waterSchedule = 4;
+	SunLevel sunLevel = 5;
+	string notes = 6;
+	bool isPetSafe = 7;
+	int64 food = 8;
+	bool shouldMist = 9;
 }
+
+message Plants {
+	repeated Plant catalog = 1;
+}
+
+message Empty {}
 
 message Feedback {
 	bool success = 1;
@@ -41,4 +48,5 @@ message Feedback {
 service PlantsService {
 	rpc GetPlant(RequestPlant) returns (Plant) {}
 	rpc AddPlant(Plant) returns (Feedback) {}
+	rpc GetAllPlants(Empty) returns (Plants) {}
 }

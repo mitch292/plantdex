@@ -48,4 +48,10 @@ func main() {
 
 	log.Printf("We added a plant!!: %v\n", addResp)
 
+	allPlants, err := p.GetAllPlants(context.Background(), &plants.Empty{})
+	if err != nil {
+		log.Fatalf("Error fetching all the plants: %s\n", err)
+	}
+	log.Printf("We got all the plants!!!: %v\n", allPlants.Catalog)
+
 }

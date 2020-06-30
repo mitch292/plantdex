@@ -12,8 +12,6 @@ type Server struct {
 
 // GetPlant is a function used by our gRPC server to return plant by a given name
 func (s *Server) GetPlant(ctx context.Context, requestPlant *RequestPlant) (*Plant, error) {
-	log.Printf("Received a request for a plant: %d", requestPlant.ID)
-
 	plant, err := getPlantFromDB(requestPlant.ID)
 	if err != nil {
 		log.Fatalf("Failure fetching the plant from the DB: %s\n", err)
@@ -21,6 +19,17 @@ func (s *Server) GetPlant(ctx context.Context, requestPlant *RequestPlant) (*Pla
 	}
 
 	return plant, nil
+}
+
+// GetAllPlants is a function used by our gRPC server to return plant by a given name
+func (s *Server) GetAllPlants(ctx context.Context, e *Empty) (*Plants, error) {
+	plants, err := getAllPlantsFromDB()
+	if err != nil {
+		log.Fatalf("Failure fetching all the plants from the DB: %s\n", err)
+		return plants, err
+	}
+	log.Println("the plants!!!", plants)
+	return plants, nil
 }
 
 // AddPlant will add a new plant to our database

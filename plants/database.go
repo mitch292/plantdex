@@ -51,11 +51,42 @@ func addPlantToDB(p *Plant) (int64, error) {
 
 func getPlantFromDB(id int64) (*Plant, error) {
 	var p Plant
-	err := db.QueryRow("SELECT name, size, water_schedule, sun_level, notes, is_pet_safe, food, should_mist FROM plants WHERE id = ?", id).Scan(&p.Name, &p.Size, &p.WaterSchedule, &p.SunLevel, &p.Notes, &p.IsPetSafe, &p.Food, &p.ShouldMist)
+	err := db.QueryRow("SELECT * FROM plants WHERE id = ?", id).Scan(&p.Id, &p.Name, &p.Size, &p.WaterSchedule, &p.SunLevel, &p.Notes, &p.IsPetSafe, &p.Food, &p.ShouldMist)
 	if err != nil {
 		log.Fatalf("Error fetching the plant from the database: %s\n", err)
 		return &p, err
 	}
 
 	return &p, nil
+}
+
+func getAllPlantsFromDB() (*Plants, error) {
+	var plants Plants
+	stmt, err := db.Prepare("SELECT * FROM plants")
+	if err != nil {
+		log.Fatalf("Error preparing the all plants query: %s\n", err)
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query()
+	if err != nil {
+		log.Fatalf("Error excecuting the all plants query: %s\n", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var p Plant
+		err := rows.Scan(&p.Id, &p.Name, &p.Size, &p.WaterSchedule, &p.SunLevel, &p.Notes, &p.IsPetSafe, &p.Food, &p.ShouldMist)
+		if err != nil {
+			log.Fatalf("Error while scanning the rows: %s\n", err)
+		}
+		plants.Catalog = append(plants.Catalog, &p)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		log.Fatalf("Error in our final check: %s\n", err)
+	}
+
+	return &plants, nil
+
 }
