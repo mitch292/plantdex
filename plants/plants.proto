@@ -49,5 +49,6 @@ service PlantsService {
 	rpc GetPlant(RequestPlant) returns (Plant) {}
 	rpc AddPlant(Plant) returns (Feedback) {}
 	rpc UpdatePlant(Plant) returns (Feedback) {}
+	rpc DeletePlant(RequestPlant) returns (Feedback) {}
 	rpc GetAllPlants(Empty) returns (Plants) {}
 }

@@ -46,6 +46,25 @@ func addPlantToDB(p *Plant) (int64, error) {
 	return newPlantID, nil
 }
 
+func deletePlantFromDB(id int64) (int64, error) {
+	stmt, err := db.Prepare("DELETE FROM plants WHERE id = ?")
+	if err != nil {
+		log.Fatalf("Error preparing the delete db statement: %s\n", err)
+	}
+
+	res, err := stmt.Exec(id)
+	if err != nil {
+		log.Fatalf("Error executing the delete statment: %s\n", err)
+	}
+
+	deletedID, err := res.LastInsertId()
+	if err != nil {
+		log.Fatalf("Error getting the ID of the deleted row: %s\n", err)
+	}
+
+	return deletedID, nil
+}
+
 func updatePlantInDB(p *Plant) (int64, error) {
 	stmt, err := db.Prepare("UPDATE plants SET name = ?, size = ?, water_schedule = ?, sun_level = ?, notes = ?, is_pet_safe = ?, food = ?, should_mist = ? WHERE id = ?")
 	if err != nil {

@@ -15,7 +15,6 @@ func (s *Server) GetPlant(ctx context.Context, rp *RequestPlant) (*Plant, error)
 	plant, err := getPlantFromDB(rp.ID)
 	if err != nil {
 		log.Fatalf("Failure fetching the plant from the DB: %s\n", err)
-		return plant, err
 	}
 
 	return plant, nil
@@ -26,8 +25,8 @@ func (s *Server) GetAllPlants(ctx context.Context, e *Empty) (*Plants, error) {
 	plants, err := getAllPlantsFromDB()
 	if err != nil {
 		log.Fatalf("Failure fetching all the plants from the DB: %s\n", err)
-		return plants, err
 	}
+
 	return plants, nil
 }
 
@@ -38,19 +37,25 @@ func (s *Server) AddPlant(ctx context.Context, plant *Plant) (*Feedback, error) 
 		log.Fatalf("Failure adding this plant to the DB: %s\n", err)
 	}
 
-	return &Feedback{Success: true, Message: "ok"}, nil
+	return &Feedback{Success: true, Message: "added"}, nil
 }
 
 // UpdatePlant will update an existing plant in the DB
 func (s *Server) UpdatePlant(ctx context.Context, plant *Plant) (*Feedback, error) {
-	log.Printf("Got a request to update a plant: %d\n", plant.Id)
-
-	id, err := updatePlantInDB(plant)
+	_, err := updatePlantInDB(plant)
 	if err != nil {
 		log.Fatalf("Failure adding this plant to the DB: %s\n", err)
 	}
 
-	log.Printf("Success %d\n", id)
+	return &Feedback{Success: true, Message: "updated"}, nil
+}
 
-	return &Feedback{Success: true, Message: "ok"}, nil
+// DeletePlant is a function used to remove a plant from our database
+func (s *Server) DeletePlant(ctx context.Context, rp *RequestPlant) (*Feedback, error) {
+	_, err := deletePlantFromDB(rp.ID)
+	if err != nil {
+		log.Fatalf("Failure deleting the plant from the DB: %s\n", err)
+	}
+
+	return &Feedback{Success: true, Message: "removed"}, nil
 }

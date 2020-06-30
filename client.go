@@ -73,4 +73,14 @@ func main() {
 	}
 
 	log.Printf("We updated a plant!!: %v\n", updateResp)
+
+	// Test requesting a plant
+	delReq := plants.RequestPlant{ID: 3}
+
+	delRes, err := p.DeletePlant(context.Background(), &delReq)
+	if err != nil {
+		log.Fatalf("Error calling GetPlant: %s\n", err)
+	}
+
+	log.Printf("Delete response from the server: %s\n", delRes)
 }
