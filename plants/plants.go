@@ -11,8 +11,8 @@ type Server struct {
 }
 
 // GetPlant is a function used by our gRPC server to return plant by a given name
-func (s *Server) GetPlant(ctx context.Context, requestPlant *RequestPlant) (*Plant, error) {
-	plant, err := getPlantFromDB(requestPlant.ID)
+func (s *Server) GetPlant(ctx context.Context, rp *RequestPlant) (*Plant, error) {
+	plant, err := getPlantFromDB(rp.ID)
 	if err != nil {
 		log.Fatalf("Failure fetching the plant from the DB: %s\n", err)
 		return plant, err
@@ -28,15 +28,24 @@ func (s *Server) GetAllPlants(ctx context.Context, e *Empty) (*Plants, error) {
 		log.Fatalf("Failure fetching all the plants from the DB: %s\n", err)
 		return plants, err
 	}
-	log.Println("the plants!!!", plants)
 	return plants, nil
 }
 
 // AddPlant will add a new plant to our database
 func (s *Server) AddPlant(ctx context.Context, plant *Plant) (*Feedback, error) {
-	log.Printf("Recieved a request to add a plant: %s", plant)
+	_, err := addPlantToDB(plant)
+	if err != nil {
+		log.Fatalf("Failure adding this plant to the DB: %s\n", err)
+	}
 
-	id, err := addPlantToDB(plant)
+	return &Feedback{Success: true, Message: "ok"}, nil
+}
+
+// UpdatePlant will update an existing plant in the DB
+func (s *Server) UpdatePlant(ctx context.Context, plant *Plant) (*Feedback, error) {
+	log.Printf("Got a request to update a plant: %d\n", plant.Id)
+
+	id, err := updatePlantInDB(plant)
 	if err != nil {
 		log.Fatalf("Failure adding this plant to the DB: %s\n", err)
 	}

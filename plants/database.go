@@ -27,26 +27,42 @@ func InitDB() {
 	db = database
 }
 
-// addPlantToDB will add a plant to our plants table in the database
 func addPlantToDB(p *Plant) (int64, error) {
 	stmt, err := db.Prepare("INSERT INTO plants (name, size, water_schedule, sun_level, notes, is_pet_safe, food, should_mist) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		log.Fatalf("Error preparing the insert statement: %s\n", err)
-		return 0, err
 	}
 
 	res, err := stmt.Exec(p.Name, p.Size, p.WaterSchedule, p.SunLevel, p.Notes, p.IsPetSafe, p.Food, p.ShouldMist)
 	if err != nil {
 		log.Fatalf("Error adding the plant to the database: %s\n", err)
-		return 0, err
 	}
 
 	newPlantID, err := res.LastInsertId()
 	if err != nil {
-		log.Fatalf("Error readingt he last inserted item's ID: %s\n", err)
+		log.Fatalf("Error reading the last inserted item's ID: %s\n", err)
 	}
 
 	return newPlantID, nil
+}
+
+func updatePlantInDB(p *Plant) (int64, error) {
+	stmt, err := db.Prepare("UPDATE plants SET name = ?, size = ?, water_schedule = ?, sun_level = ?, notes = ?, is_pet_safe = ?, food = ?, should_mist = ? WHERE id = ?")
+	if err != nil {
+		log.Fatalf("Error updating the plant in the db %s\n", err)
+	}
+
+	res, err := stmt.Exec(p.Name, p.Size, p.WaterSchedule, p.SunLevel, p.Notes, p.IsPetSafe, p.Food, p.ShouldMist, p.Id)
+	if err != nil {
+		log.Fatalf("Error executing the update query: %s\n", err)
+	}
+
+	updatedPlantID, err := res.LastInsertId()
+	if err != nil {
+		log.Fatalf("There was an getting the last ID: %s\n", err)
+	}
+
+	return updatedPlantID, nil
 }
 
 func getPlantFromDB(id int64) (*Plant, error) {
@@ -54,7 +70,6 @@ func getPlantFromDB(id int64) (*Plant, error) {
 	err := db.QueryRow("SELECT * FROM plants WHERE id = ?", id).Scan(&p.Id, &p.Name, &p.Size, &p.WaterSchedule, &p.SunLevel, &p.Notes, &p.IsPetSafe, &p.Food, &p.ShouldMist)
 	if err != nil {
 		log.Fatalf("Error fetching the plant from the database: %s\n", err)
-		return &p, err
 	}
 
 	return &p, nil
@@ -88,5 +103,4 @@ func getAllPlantsFromDB() (*Plants, error) {
 	}
 
 	return &plants, nil
-
 }
